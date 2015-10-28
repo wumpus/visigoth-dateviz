@@ -1,0 +1,115 @@
+body{
+font-family: georgia;
+}
+
+#mytitle{
+  font-size: 200%;  
+  text-align: center;
+}
+
+#loadingText{
+  color: grey;
+  text-align: center;
+}
+
+#container{
+  display: none;
+}
+
+#headerText{
+  margin-left: 70px;
+}
+
+#wordForm{
+  display:inline;
+}
+
+#inputspan{
+  float: left;
+}
+
+#title{
+  visibility: hidden;
+  float: right;
+  margin-right: 80px;
+}
+
+#wordText{
+  font-variant:small-caps;
+  font-size: 110%;
+  font-weight: bold;
+}
+
+#bookText{
+  margin-left: 70px;
+}
+
+#context{
+  height:800px;
+  overflow:hidden;
+}
+
+#chapterTitle{
+  font-size: 120%;
+  margin-bottom: 10px;  
+}
+
+#footerInfo{
+  text-align: center;
+  display: none;
+}
+
+.right{
+  float: right;
+}
+
+.dropDown{
+  text-transform: capitalize;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: #647EAA;
+}
+
+.bbar{
+	fill:steelblue;
+}
+
+.chapter.light{
+	fill:lightgrey;
+}
+
+.chapter.dark{
+	fill:grey;
+}
+
+.x.axis path {
+  display: none;
+}
+
+#tooltip {
+  position:absolute;
+  z-index: 10;
+  visibility: hidden;
+  background-color: white;
+  font-size: 110%;
+  box-shadow: 2px 2px 3px #000;
+  border: 1px solid grey;
+}
+
+.blacklink{  -webkit-user-select: none; /* Chrome/Safari */        
+
+  font-size: 100%;
+}
+
+.ui-widget {
+  font-family: georgia !important;
+  font-size: 1em !important;
+}
