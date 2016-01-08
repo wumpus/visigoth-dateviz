@@ -2,29 +2,36 @@
 
 from bottle import route, request, response, run, static_file
 import pickle
+import shelve
 import json
 import urllib.parse
 import os
+import sys
 
 reloader=True
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '../visigoth'))
+from visigoth.redirs import redirs # XXX what did I screw up here?
+
+# Only open stuff if we are really going to serve queries
 if os.environ.get('BOTTLE_CHILD') or not reloader:
-    print("reading autocomplete pickle...")
-    f = open('prefixes_pickle', 'rb') # utf8?
+
+    print("reading autocomplete pickle... ")
+    f = open(os.environ.get('VISIGOTH_DATA') + '/prefixes_pickle', 'rb') # utf8?
     prefixes = pickle.load(f) # utf8?
     f.close()
     print("done.")
 
-    print("reading years pickle...")
-    f = open('years_pickle', 'rb') # utf8?
-    years = pickle.load(f) # utf8?
-    f.close()
+    print("opening year shelf... ")
+    years = shelve.open(os.environ.get('VISIGOTH_DATA', '.') + '/year_shelf.eq.4.fixedup2', flag='r')
     print("done.")
 
-    print("reading sentences pickle...")
-    f = open('sentences_pickle', 'rb') # utf8?
-    sentences = pickle.load(f) # utf8?
-    f.close()
+    print("opening sentence shelf... ")
+    sentences = shelve.open(os.environ.get('VISIGOTH_DATA', '.') + '/sentence_shelf.eq.4.fixedup', flag='r')
+    print("done.")
+
+    print("opening redirs shelf... ")
+    redir = redirs()
     print("done.")
 
 @route('/')
@@ -53,50 +60,37 @@ def autocomplete_rest():
         ret.append({ 'label': urllib.parse.unquote(a),
                      'number': answer[a] })
 
-    response.content_type = 'application/json'
-    return json.dumps({ "autocomplete": ret })
+    return { "autocomplete": ret }
 
 @route('/years')
 def years_rest():
     q = request.query.q or ''
 
-    my_years = years.get(q.lower(), {})
+    canon = redir.forward(q)
 
-#    print("/years returning", my_years)
+    y = years.get(canon, None) or years.get(canon.lower(), {})
 
-    response.content_type = 'application/json'
-    return json.dumps({ "years": my_years })
+    print("/years returning", y)
+
+    return { "years": y }
 
 @route('/sentences')
 def sentences_rest():
     q = request.query.q or ''
     year = request.query.year or ''
-    my_sentences = sentences.get(q.lower(), {}).get(int(year), {})
 
-    ret = []
-    ia_ids = {}
-    for ia_id, leaf, sentence in my_sentences:
-        ret.append({ "ia_id": ia_id, "leaf": leaf, "sentence": sentence })
-        ia_ids[ia_id] = 1
+    canon = redir.forward(q)
+    key = canon + ' ' + year
+    print("key is", key)
 
-    titles = {}
-    for ia_id in ia_ids:
-        title = sentences.get('titles of the books',{}).get(ia_id)
-        if title is not None:
-            titles[ia_id] = title
-        else:
-            titles[ia_id] = "title of "+ia_id
+    s = sentences.get(key, []) # a list of dicts
 
-    print("/sentences returning titles of", titles)
+    print("/sentences returning", s)
 
-#    print("/sentences returning", ret)
-
-    response.content_type = 'application/json'
-    return json.dumps({ "sentences": ret, 'titles': titles })
+    return { "sentences": s }
 
 @route('/robots.txt')
 def robots():
     return static_file('robots.txt', root='./static')
 
-#run(host='0.0.0.0', port=8080, reloader=True) -- loads all the pickles twice! feature!
 run(host='0.0.0.0', port=8080, reloader=reloader)
