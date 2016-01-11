@@ -73,6 +73,8 @@ svg.selectAll('.bar')
 	console.log("mouseover event, year=", year);
 	document.getElementById("chapterTitle").innerHTML = year;
 
+	// bail out if there's no data for this year -- shouldn't happen, but it does :-/ XXX
+
 	// now go fetch the actual sentences, and have the callback stuff them in "context"
 
 	console.log("firing getJSON for sentences for year ",year);
