@@ -7,6 +7,7 @@ import json
 import urllib.parse
 import os
 import sys
+from operator import itemgetter
 
 reloader=True
 
@@ -54,11 +55,14 @@ def autocomplete_rest():
 #    print("query", q, "answer", answer)
 
     sorted_list = ((a, answer[a]) for a in sorted(answer, key=answer.get, reverse=True))
+    dedup_lower = {} # yeah, I have a lot of cased-dups. I'd like to keep BBS and BBs but no such luck.
     ret = []
     for a, c in sorted_list:
-        b = urllib.parse.quote(urllib.parse.unquote(a))
-        ret.append({ 'label': urllib.parse.unquote(a),
-                     'number': answer[a] })
+        if a.lower() not in dedup_lower:
+            b = urllib.parse.quote(urllib.parse.unquote(a))
+            ret.append({ 'label': urllib.parse.unquote(a),
+                         'number': answer[a] })
+            dedup_lower[a.lower()] = 1
 
     return { "autocomplete": ret }
 
@@ -83,11 +87,37 @@ def sentences_rest():
     key = canon + ' ' + year
     print("key is", key)
 
-    s = sentences.get(key, []) # a list of dicts
+    new = sentences.get(key, []) # a list of dicts
 
-    print("/sentences returning", s)
+    # XXX bug fix, leaf numbers are off by one (well, other than that _059 bug...)
+    for s in new:
+        s['leaf'] = str(int(s['leaf'])-1)
 
-    return { "sentences": s }
+    if len(new) > 1:
+        # XXX dedup, because I appear to have inserted rank=7 twice (oops)
+        # and dedup on just the sentence, which helps knock out multiple editions
+        newnew = []
+        dedup = {}
+        for s in new:
+            dupkey = s['ia_id'] + s['s'] + str(s['rank']) + s['leaf']
+            dupkey_less = s['ia_id'] + str(s['rank']) + s['leaf']
+            if dupkey not in dedup and dupkey_less not in dedup and s['s'] not in dedup:
+                newnew.append(s)
+            else:
+                print("deduped entry from", s['ia_id'], "leaf", s['leaf'])
+            dedup[dupkey] = 1
+            dedup[dupkey_less] = 1
+            dedup[s['s']] = 1
+        new = newnew
+
+        # XXX sort, because I only sorted the lists that were too long (oops)
+        # don't bother to trim, I know it's not too long
+        new = sorted(new, key=itemgetter('ia_id'))
+        new = sorted(new, key=itemgetter('rank'), reverse=True)
+
+    print("/sentences returning", new)
+
+    return { "sentences": new }
 
 @route('/robots.txt')
 def robots():
