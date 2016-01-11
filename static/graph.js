@@ -86,7 +86,7 @@ svg.selectAll('.bar')
 
 	    var sentences = sdata.error ? [] : sdata.sentences;
 	    var formatted_text = $.map(sentences, function(m) {
-		var t = '<a href="https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank">' + m.title + '</a><p />';
+		var t = '<a href="https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank">' + m.title + '</a> rank='+ m.rank + '<p />';
 		var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold XXX
 		s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
 
@@ -119,7 +119,7 @@ for (var i = 1000; i < 2000; i++) {
 	    var cord = (typeof event === 'undefined') ? ffm : [event.pageX, event.pageY]; // FireFox bugfix, see ffm at bottom
 	    tooltip.style("top", (cord[1]-10)+"px").style("left",(cord[0]+10)+"px");
 	    tooltip.style("visibility", "visible");
-	    tooltip.text(d3.select(this)[0][0].attributes[5].nodeValue);
+	    tooltip.text(d3.select(this)[0][0].attributes[5].value);
 	    d3.select(this).style("fill", "#422813");
 	})
 	.on("mousemove", function(e){
@@ -175,6 +175,12 @@ function updateGraph(match){
 
 	    d3.select("#wordNum").text(word_sum); // sets count in visible label
 
+	    if ( word_sum > 1 ) {
+		document.getElementById('loadingText').innerHTML = '';
+	    } else {
+		document.getElementById('loadingText').innerHTML = 'Tip: Pick something out of the dropdown.<br>This demo is limited to things with Wikipedia articles.';
+	    }
+
 	    console.log("telling d3 about the new data");
 
 	    y.domain([0, d3.max(data)]);
@@ -193,6 +199,7 @@ function updateGraph(match){
 function resetData(){
         console.log("setting data to zero");
         console.log("numBars is", numBars);
+        data = []; // seems to fix my max problem
 	for (var i = 0; i < numBars; i++){
 		data[i] = 0;
 	}
