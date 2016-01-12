@@ -18,7 +18,7 @@ from visigoth.redirs import redirs # XXX what did I screw up here?
 if os.environ.get('BOTTLE_CHILD') or not reloader:
 
     print("reading autocomplete pickle... ")
-    f = open(os.environ.get('VISIGOTH_DATA') + '/prefixes_pickle', 'rb') # utf8?
+    f = open(os.environ.get('VISIGOTH_DATA', '.') + '/prefixes_pickle', 'rb') # utf8?
     prefixes = pickle.load(f) # utf8?
     f.close()
     print("done.")
@@ -50,12 +50,12 @@ def autocomplete_rest():
     # this must match what the autocomplete builder used as max length
     q = q[0:min(len(q), 10)]
 
-#    print("query", q)
     answer = prefixes.get(q, {})
-#    print("query", q, "answer", answer)
 
     sorted_list = ((a, answer[a]) for a in sorted(answer, key=answer.get, reverse=True))
-    dedup_lower = {} # yeah, I have a lot of cased-dups. I'd like to keep BBS and BBs but no such luck.
+
+    # XXX I have a lot of cased-dups. I'd like to keep BBS and BBs but no such luck.
+    dedup_lower = {}
     ret = []
     for a, c in sorted_list:
         if a.lower() not in dedup_lower:
@@ -94,7 +94,7 @@ def sentences_rest():
         s['leaf'] = str(int(s['leaf'])-1)
 
     if len(new) > 1:
-        # XXX dedup, because I appear to have inserted rank=7 twice (oops)
+        # XXX bug dedup, because I appear to have inserted rank=7 twice (oops)
         # and dedup on just the sentence, which helps knock out multiple editions
         newnew = []
         dedup = {}
@@ -102,6 +102,7 @@ def sentences_rest():
             dupkey = s['ia_id'] + s['s'] + str(s['rank']) + s['leaf']
             dupkey_less = s['ia_id'] + str(s['rank']) + s['leaf']
             if dupkey not in dedup and dupkey_less not in dedup and s['s'] not in dedup:
+                # XXX do a case-blind replace for all backwards redirs of s XXX
                 newnew.append(s)
             else:
                 print("deduped entry from", s['ia_id'], "leaf", s['leaf'])
@@ -110,7 +111,7 @@ def sentences_rest():
             dedup[s['s']] = 1
         new = newnew
 
-        # XXX sort, because I only sorted the lists that were too long (oops)
+        # XXX bug fix sort, because I only sorted the lists that were too long (oops)
         # don't bother to trim, I know it's not too long
         new = sorted(new, key=itemgetter('ia_id'))
         new = sorted(new, key=itemgetter('rank'), reverse=True)
