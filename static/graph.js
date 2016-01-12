@@ -88,7 +88,10 @@ svg.selectAll('.bar')
 
 	    var sentences = sdata.error ? [] : sdata.sentences;
 	    var formatted_text = $.map(sentences, function(m) {
-		var t = '<a href="https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank">' + m.title + '</a> rank='+ m.rank + '<p />';
+		var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
+		var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
+
+		var t = '<a href="' + url_details + '">' + m.title + '</a> rank='+ m.rank + '<p />';
 		var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold XXX
 		s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
 
