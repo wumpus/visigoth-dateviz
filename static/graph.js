@@ -46,7 +46,7 @@ svg.append("g")
     .attr("class", "y axis")
     .call(yAxis)
     .append("text")
-    .attr("transform", "translate("+ (-100/2) +","+(height/2)+")rotate(-90)") // -80 => -100
+    .attr("transform", "translate("+ (-100/2) +","+(height/2)+")rotate(-90)") // changed -80 to -100 to fit better
     .style("text-anchor", "middle")
     .attr("font-size",'110%')
     .text("count by year");
@@ -88,14 +88,12 @@ svg.selectAll('.bar')
 
 	    var sentences = sdata.error ? [] : sdata.sentences;
 	    var formatted_text = $.map(sentences, function(m) {
-		var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
+		//var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
 		var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
 
 		var t = '<a href="' + url_details + '">' + m.title + '</a> rank='+ m.rank + '<p />';
 		var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold XXX
 		s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
-
-//		console.log("formatted one sentence as", t + s + '<p />');
 
 		return t + s + '<p />'
 	    });
@@ -165,13 +163,13 @@ function updateGraph(match){
 
 	    console.log("filling in data from callback values");
 	    for (var p in years) {
-		data[p-1000] = years[p]; // scatter-gather
+		data[p-1000] = years[p]; // scatter-gather XXX fails to clip to 1000:2000
 		word_sum += years[p];
 	    }
 	    console.log("after filling in data, length is", data.length);
 	    console.log("word_sum is now", word_sum);
 
-	    var datamax = d3.max(data);
+	    var datamax = d3.max(data); // XXX fails to clip to 1000:2000
 	    for( var i = 0, l = data.length; i < l; i++ ) {
 		if ( data[i] > 0 ) {
 		    data[i] = Math.max(data[i], datamax / (height/2.)); // if non-zero, min height is 3 pixels
@@ -183,12 +181,12 @@ function updateGraph(match){
 	    if ( word_sum > 1 ) {
 		document.getElementById('loadingText').innerHTML = '';
 	    } else {
-		document.getElementById('loadingText').innerHTML = 'Tip: Pick something out of the dropdown.<br>This demo is limited to things with Wikipedia articles.';
+		document.getElementById('loadingText').innerHTML = 'Tip: Pick something out of the dropdown!<br>This demo is limited to "things" with Wikipedia articles.';
 	    }
 
 	    console.log("telling d3 about the new data");
 
-	    y.domain([0, d3.max(data)]);
+	    y.domain([0, d3.max(data)]); // XXX this is over all data, not the 1000:2000 that we're actually showing
 	    svg.select(".y.axis").call(yAxis);
 	
 	    svg.selectAll('.bar')
