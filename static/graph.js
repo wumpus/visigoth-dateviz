@@ -4,7 +4,7 @@ var xWidth = 1000;
 var barWidth = 1; // should be an integer
 var numBars = Math.floor(xWidth/barWidth); // depends on barWidth
 
-var margin = {top: 20, right: 0, bottom: 40, left: 70};
+var margin = {top: 20, right: 0, bottom: 50, left: 70};
 var width = numBars*barWidth // + margin.left + margin.right; // depends on barWidth
 var height = Math.max(window.innerHeight - margin.top - margin.bottom - 400, 400); // max of 400
 
@@ -57,7 +57,7 @@ svg.append("g")
     .attr("transform", "translate(0," + (height) + ")")
     .call(xAxis)
     .append("text")
-    .attr("transform", "translate("+(width/2)+","+(35)+")") // note that this transform also gets the above transform applied!
+    .attr("transform", "translate("+(width/2)+","+(45)+")") // note that this transform also gets the above transform applied!
     .style("text-anchor", "middle")
     .attr("font-size",'110%')
     .text("year");
@@ -80,7 +80,7 @@ svg.selectAll('.bar')
     .attr("class", "bar")
     .attr("x", function(d, i){return (1+i)*barWidth;})
     .attr("width", barWidth)
-    .attr("y", height)
+    .attr("y", height) // starts at bottom
     .attr("height", 0)
     .on("mouseover", function(){
 	var cord = d3.mouse(this);
@@ -90,7 +90,7 @@ svg.selectAll('.bar')
 	var cord_y = Math.floor(y.invert(cord[1]));
 	console.log("saw mouseover event in the graph, x,y are ", cord_x, cord_y);
 
-        var year = cord_x + 999; // does this need to be a global? XXX does it need to be 1000?
+        var year = cord_x + 999; // does this need to be a global? XXX
 	console.log("mouseover event, year=", year);
 	document.getElementById("chapterTitle").innerHTML = year;
 
@@ -113,7 +113,7 @@ svg.selectAll('.bar')
 		var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
 
 		var t = '<a href="' + url_details + '">' + m.title + '</a> rank='+ m.rank + '<p />';
-		var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold XXX
+		var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold, but that's not a big deal
 		s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
 
 		return t + s + '<p />'
@@ -256,7 +256,7 @@ $( "#autocomplete" ).autocomplete({
         	.appendTo( ul );
 	};
 
-//firefox doesn't capture mousemove propertly
+//firefox doesn't capture mousemove propertly?
 var ffm;
 function onMouseMove(e){
 	ffm = [e.clientX, e.clientY];
