@@ -91,10 +91,6 @@ font-family: georgia;
 	fill:grey;
 }
 
-.x.axis path {
-  display: none;
-}
-
 #tooltip {
   position:absolute;
   z-index: 10;

@@ -1,18 +1,28 @@
-//var xWidth = Math.max(window.innerWidth - 150, 1000); // 1000 wide, because 
-var xWidth = 1000; // so we know it's 1 pixel = 1 year
+//var xWidth = Math.max(window.innerWidth - 150, 1000); // force to 1000 wide, because we want that many years to be possible
+var xWidth = 1000;
 
-var barWidth = 1;
+var barWidth = 1; // should be an integer
 var numBars = Math.floor(xWidth/barWidth); // depends on barWidth
-console.log("numBars is", numBars);
 
-var margin = {top: 20, right: 0, bottom: 20, left: 70},
-	width = numBars*barWidth + margin.left + margin.right, // depends on barWidth
-	height = Math.max(window.innerHeight - margin.top - margin.bottom - 400, 400);
-console.log("width is", width);
-console.log("height is", height);
+var margin = {top: 20, right: 0, bottom: 40, left: 70};
+var width = numBars*barWidth // + margin.left + margin.right; // depends on barWidth
+var height = Math.max(window.innerHeight - margin.top - margin.bottom - 400, 400); // max of 400
+
+var minDate = new Date("1500");
+var maxDate = new Date("2000");
+
+var x = d3.time.scale()
+                .domain([minDate, maxDate])
+                .range([0, width]);
 
 var y = d3.scale.linear()
+		.domain([0, 100])
 		.range([height, 0]);
+
+var xAxis = d3.svg.axis()
+		.scale(x);
+                // does not appear to need a format. default orientation is bottom.
+		// XXX it's drawing it at the top no matter what! grr
 
 var yAxis = d3.svg.axis()
 		.scale(y)
@@ -41,15 +51,26 @@ var word_sum;			// count of word entries
 //0s out data array
 resetData();
 
+// create x axis
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + (height) + ")")
+    .call(xAxis)
+    .append("text")
+    .attr("transform", "translate("+(width/2)+","+(35)+")") // note that this transform also gets the above transform applied!
+    .style("text-anchor", "middle")
+    .attr("font-size",'110%')
+    .text("year");
+
 // create y axis
 svg.append("g")
     .attr("class", "y axis")
     .call(yAxis)
     .append("text")
-    .attr("transform", "translate("+ (-100/2) +","+(height/2)+")rotate(-90)") // changed -80 to -100 to fit better
+    .attr("transform", "translate("+ (-100/2) +","+(height/2)+")rotate(-90)") // changed -80 to -100 to keep label off the digits
     .style("text-anchor", "middle")
     .attr("font-size",'110%')
-    .text("count by year");
+    .text("count");
 
 // draws histogram bars - zeroes
 // set up mouseover effect callback
@@ -107,35 +128,6 @@ svg.selectAll('.bar')
 	d3.select(this).style("fill", ""); // change color of this bar back to default
     });
 
-// draw X-axis bars -- alternating black/white, leftover from this page's whale origins
-for (var i = 1000; i < 2000; i++) {
-    svg.append("rect")
-	.attr("class", "chapter " + (i%2 ? 'light' : 'dark')) // alternates every time
-	.attr("x", (i - 999) * barWidth) // may be off by one? XXX
-	.attr("height", 7) // 7 pixels tall
-	.attr("width", barWidth) // all are the same width
-	.attr("y", height)
-	.attr("titleOfChapter", i) // label is actually year
-	.on('mouseover', function(){
-	    console.log("mouseover event in the year bar");
-	    // XX this cord is wrong, scroll the page and it doesn't appear where it belongs!
-	    var cord = (typeof event === 'undefined') ? ffm : [event.pageX, event.pageY]; // FireFox bugfix, see ffm at bottom
-	    tooltip.style("top", (cord[1]-10)+"px").style("left",(cord[0]+10)+"px");
-	    tooltip.style("visibility", "visible");
-	    tooltip.text(d3.select(this)[0][0].attributes[5].value);
-	    d3.select(this).style("fill", "#422813");
-	})
-	.on("mousemove", function(e){
-	    var cord = (typeof event === 'undefined') ? ffm : [event.pageX, event.pageY];
-	    tooltip.style("top", (cord[1]-10)+"px").style("left",(cord[0]+10)+"px");
-	})
-	.on("mouseout", function (){
-	    tooltip.style("visibility", "hidden");
-	    d3.select(this).style("fill","");
-	});
-
-}
-
 //$('#footer').css('margin-left', xWidth/2 - 180);
 
 d3.select("#container").style("display", "block");
@@ -176,7 +168,7 @@ function updateGraph(match){
 		}
 	    }
 
-	    d3.select("#wordNum").text(word_sum); // sets count in visible label
+	    d3.select("#wordNum").text(word_sum.toLocaleString()); // sets count in visible label
 
 	    if ( word_sum > 1 ) {
 		document.getElementById('loadingText').innerHTML = '';
@@ -186,13 +178,16 @@ function updateGraph(match){
 
 	    console.log("telling d3 about the new data");
 
+	    x.domain([new Date("1000"), new Date("2000")]);
+	    svg.select(".x.axis").call(xAxis);
 	    y.domain([0, d3.max(data)]); // XXX this is over all data, not the 1000:2000 that we're actually showing
 	    svg.select(".y.axis").call(yAxis);
 	
+	    // Alter the existing bars to new heights, with an animation
 	    svg.selectAll('.bar')
 		.data(data)
 		.transition()
-		.duration(500) // one second? changed to 1/2
+		.duration(500) // changed from 1s to 1/2s
 		.attr("y", function(d){return y(d)})
 		.attr("height", function(d){return height - y(d);});			
 	});
@@ -200,8 +195,6 @@ function updateGraph(match){
 
 //0s out bar height array
 function resetData(){
-        console.log("setting data to zero");
-        console.log("numBars is", numBars);
         data = []; // seems to fix my max problem
 	for (var i = 0; i < numBars; i++){
 		data[i] = 0;
