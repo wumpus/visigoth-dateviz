@@ -8,7 +8,7 @@ var margin = {top: 20, right: 0, bottom: 50, left: 70};
 var width = numBars*barWidth // + margin.left + margin.right; // depends on barWidth
 var height = Math.max(window.innerHeight - margin.top - margin.bottom - 400, 400); // max of 400
 
-var minDate = new Date("1500");
+var minDate = new Date("1000");
 var maxDate = new Date("2000");
 
 var x = d3.time.scale()
@@ -87,16 +87,15 @@ svg.selectAll('.bar')
 	d3.select(this).style("fill", "#435A82"); // change color of this bar
 
 	var cord_x = Math.floor(cord[0]/barWidth);
-	var cord_y = Math.floor(y.invert(cord[1]));
+	var cord_y = Math.floor(y.invert(cord[1])); // XXX is cord[1] a Date?
+	console.log("XXX saw mouseover, cord[1] is", cord[1]);
 	console.log("saw mouseover event in the graph, x,y are ", cord_x, cord_y);
 
-        var year = cord_x + 999; // does this need to be a global? XXX
+        var year = cord_x + 999;
 	console.log("mouseover event, year=", year);
 	document.getElementById("chapterTitle").innerHTML = year;
 
 	// bail out if there's no data for this year -- shouldn't happen, but it does :-/ XXX
-
-	// now go fetch the actual sentences, and have the callback stuff them in "context"
 
 	console.log("firing getJSON for sentences for year ",year);
 
