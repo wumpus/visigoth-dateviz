@@ -42,6 +42,7 @@ var tooltip = d3.select("body")
 
 // removes placeholder loading text ... most useful so you can immediately see a crash on syntax error
 document.getElementById('loadingText').innerHTML = '';
+document.getElementById('year').innerHTML = 'click to select a year'
 
 var data = [];			// height of bars, representing occurences of match per bucket of x chars
 var word;			// matched word (or string) 
@@ -71,8 +72,8 @@ svg.append("g")
     .attr("font-size",'110%')
     .text("count");
 
-// draws initial histogram bars - zeroes
-// set up mouseover effect callback
+// draws initial histogram bars - data is all zeroes
+// set up click callback
 svg.selectAll('.bar')
     .data(data)
     .enter().append("rect")
@@ -81,45 +82,25 @@ svg.selectAll('.bar')
     .attr("width", barWidth)
     .attr("y", height) // starts at bottom
     .attr("height", 0)
-    .on("mouseover", function(){
-
+    .on("click", function(){
 	var cord = d3.mouse(this);
-	d3.select(this).style("fill", "#435A82"); // change color of this bar
+	doClick(cord);
+    });
 
-	var cord_x = Math.floor(cord[0]/barWidth);
-        var year = cord_x + 999;
-	// note that x.invert(cord[0]) is a Date object -- really ought to get year from there XXX
-	var cord_y = Math.floor(y.invert(cord[1]));
-
-	console.log("saw mouseover event in the graph, x,y are ", cord_x, cord_y);
-	console.log("mouseover event, year=", year);
-
-	document.getElementById("chapterTitle").innerHTML = year;
-
-	$.getJSON("//researcher3.fnf.archive.org:8080/sentences", {
-	    q: word, // global variable
-	    year: year
-	}, function(sdata) {
-
-	    console.log("sentences callback fired");
-
-	    var sentences = sdata.error ? [] : sdata.sentences;
-	    var formatted_text = $.map(sentences, function(m) {
-		//var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
-		var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
-
-		var t = '<a href="' + url_details + '" target="_blank">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
-		var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold, but that's not a big deal
-		s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
-
-		return t + s + '<p />'
-	    });
-	    document.getElementById("context").innerHTML = formatted_text.join('\n');
-	});
-    })
-    .on("mouseout", function (){
-	console.log("saw mouseout event, resetting bar fill to default");
-	d3.select(this).style("fill", ""); // change color of this bar back to default
+// draws initial inverted histogram bars - data is all zeroes
+// set up click callback
+svg.selectAll('.unbar')
+    .data(data)
+    .enter().append("rect")
+    .attr("class", "unbar")
+    .attr("x", function(d, i){return (1+i)*barWidth;})
+    .attr("width", barWidth)
+    .attr("y", 0) // starts at top
+    .attr("height", height-1) // extends to bottom (initial data is zero) ... minus 1 to not overwrite x axis
+    .style("fill", "#FFFFFF") // white
+    .on("click", function(){
+	var cord = d3.mouse(this);
+	doClick(cord);
     });
 
 //$('#footer').css('margin-left', xWidth/2 - 180);
@@ -129,13 +110,73 @@ d3.select("#footerInfo").style("display", "block");
 
 $('#autocomplete').focus();
 
+function doClick(cord){
+    var cord_x = Math.floor(cord[0]/barWidth);
+    var year = x.invert(cord[0]).getFullYear();
+    console.log("click event, year=", year);
+
+    var xx = year-1000; // XXX
+
+    if( ! data[xx] ) {
+	// if there's no data for this year, find a nearby year that has data
+	if ( data[xx+1] )
+	    if ( data[xx-1] ) {
+		if ( data[xx+1] > data[xx-1] )
+		    year += 1;
+		else
+		    year -= 1;
+	    } else
+		year += 1;
+	else if ( data[xx-1] )
+	    year -= 1;
+	else if ( data[xx+2] )
+	    if ( data[xx-2] ) {
+		if ( data[xx+2] > data[xx-2] )
+		    year += 2;
+		else
+		    year -= 2;
+	    } else
+		year += 2;
+	else if ( data[xx-2] )
+	    year -= 2;
+	else {
+	    document.getElementById('year').innerHTML = 'click to select a year';
+	    document.getElementById("context").innerHTML = '';
+	    return;
+	}
+	console.log('XXX adjusted year to year=', year);
+    }
+
+    document.getElementById('year').innerHTML = year;
+
+    $.getJSON("//researcher3.fnf.archive.org:8080/sentences", {
+	q: word, // global variable
+	year: year
+    }, function(sdata) {
+	console.log("sentences callback fired");
+	var sentences = sdata.error ? [] : sdata.sentences;
+
+	var formatted_text = $.map(sentences, function(m) {
+	    //var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
+	    var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
+
+	    var t = '<a href="' + url_details + '" target="_blank">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
+	    var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold, but that's not a big deal
+	    s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
+
+	    return t + s + '<p />'
+	});
+	document.getElementById("context").innerHTML = formatted_text.join('\n');
+    });
+};
+
 //redraws graph for new match
 function updateGraph(match){
         console.log("entering updateGraph, making years json outcall");
 
         // clear off the bottom stuff
-        document.getElementById("chapterTitle").innerHTML = ''
-        document.getElementById("context").innerHTML = ''
+        document.getElementById('year').innerHTML = 'click to select a year';
+        document.getElementById("context").innerHTML = '';
 
 	$.getJSON("//researcher3.fnf.archive.org:8080/years", {
 	    q: match
@@ -184,6 +225,14 @@ function updateGraph(match){
 		.duration(500) // changed from 1s to 1/2s
 		.attr("y", function(d){return y(d)}) // replaces a constant, the first time
 		.attr("height", function(d){return height - y(d);}); // ditto
+
+	    // Alter the existing unbars to new heights, with an animation
+	    svg.selectAll('.unbar')
+		.data(data)
+		.transition()
+		.duration(500) // changed from 1s to 1/2s
+		.attr("y", function(d){return 0;}) // replaces a constant, the first time
+		.attr("height", function(d){return y(d)-1;}); // ditto
 	});
 };
 
@@ -245,14 +294,7 @@ $( "#autocomplete" ).autocomplete({
 	}
 }).data('ui-autocomplete')._renderItem = function(ul, item){
 		return $( "<li>" )
-//        	.append( "<a class = 'dropDown'>" + item.value + " (" + item.number + ")</a>" )
+//        	.append( "<a class = 'dropDown'>" + item.value + " (" + item.number + ")</a>" ) // with popularity
         	.append( "<a class = 'dropDown'>" + item.value + "</a>" )
         	.appendTo( ul );
 	};
-
-//firefox doesn't capture mousemove propertly?
-var ffm;
-function onMouseMove(e){
-	ffm = [e.clientX, e.clientY];
-}
-document.addEventListener('mousemove', onMouseMove, false);
