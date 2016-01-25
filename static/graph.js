@@ -22,7 +22,6 @@ var y = d3.scale.linear()
 var xAxis = d3.svg.axis()
 		.scale(x);
                 // does not appear to need a format. default orientation is bottom.
-		// XXX it's drawing it at the top no matter what! grr
 
 var yAxis = d3.svg.axis()
 		.scale(y)
@@ -54,7 +53,7 @@ resetData();
 // create x axis
 svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(0," + (height) + ")")
+    .attr("transform", "translate(0," + (height) + ")") // draw this axis on the bottom, instead of default top
     .call(xAxis)
     .append("text")
     .attr("transform", "translate("+(width/2)+","+(45)+")") // note that this transform also gets the above transform applied!
@@ -72,7 +71,7 @@ svg.append("g")
     .attr("font-size",'110%')
     .text("count");
 
-// draws histogram bars - zeroes
+// draws initial histogram bars - zeroes
 // set up mouseover effect callback
 svg.selectAll('.bar')
     .data(data)
@@ -83,21 +82,19 @@ svg.selectAll('.bar')
     .attr("y", height) // starts at bottom
     .attr("height", 0)
     .on("mouseover", function(){
+
 	var cord = d3.mouse(this);
 	d3.select(this).style("fill", "#435A82"); // change color of this bar
 
 	var cord_x = Math.floor(cord[0]/barWidth);
-	var cord_y = Math.floor(y.invert(cord[1])); // XXX is cord[1] a Date?
-	console.log("XXX saw mouseover, cord[1] is", cord[1]);
-	console.log("saw mouseover event in the graph, x,y are ", cord_x, cord_y);
-
         var year = cord_x + 999;
+	// note that x.invert(cord[0]) is a Date object -- really ought to get year from there XXX
+	var cord_y = Math.floor(y.invert(cord[1]));
+
+	console.log("saw mouseover event in the graph, x,y are ", cord_x, cord_y);
 	console.log("mouseover event, year=", year);
+
 	document.getElementById("chapterTitle").innerHTML = year;
-
-	// bail out if there's no data for this year -- shouldn't happen, but it does :-/ XXX
-
-	console.log("firing getJSON for sentences for year ",year);
 
 	$.getJSON("//researcher3.fnf.archive.org:8080/sentences", {
 	    q: word, // global variable
@@ -111,7 +108,7 @@ svg.selectAll('.bar')
 		//var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
 		var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
 
-		var t = '<a href="' + url_details + '" target="_blank">' + m.title + '</a> rank='+ m.rank + '<p />';
+		var t = '<a href="' + url_details + '" target="_blank">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
 		var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold, but that's not a big deal
 		s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
 
@@ -119,8 +116,6 @@ svg.selectAll('.bar')
 	    });
 	    document.getElementById("context").innerHTML = formatted_text.join('\n');
 	});
-    })
-    .on("mousemove", function(){			
     })
     .on("mouseout", function (){
 	console.log("saw mouseout event, resetting bar fill to default");
@@ -155,7 +150,7 @@ function updateGraph(match){
 	    console.log("filling in data from callback values");
 	    for (var p in years) {
 		data[p-1000] = years[p]; // scatter-gather XXX fails to clip to 1000:2000
-		word_sum += years[p];
+		word_sum += years[p]; // XXX so word_sum is not the same as what appears on the graph.
 	    }
 	    console.log("after filling in data, length is", data.length);
 	    console.log("word_sum is now", word_sum);
@@ -167,7 +162,7 @@ function updateGraph(match){
 		}
 	    }
 
-	    d3.select("#wordNum").text(word_sum.toLocaleString()); // sets count in visible label
+	    d3.select("#wordNum").text(word_sum.toLocaleString()); // sets count in visible label, prettyprinted with commas
 
 	    if ( word_sum > 1 ) {
 		document.getElementById('loadingText').innerHTML = '';
@@ -179,7 +174,7 @@ function updateGraph(match){
 
 	    x.domain([new Date("1000"), new Date("2000")]);
 	    svg.select(".x.axis").call(xAxis);
-	    y.domain([0, d3.max(data)]); // XXX this is over all data, not the 1000:2000 that we're actually showing
+	    y.domain([0, d3.max(data)]); // XXX this is over all data, not the 1000:2000 that we're actually showing ... and is a recompute of datamax
 	    svg.select(".y.axis").call(yAxis);
 	
 	    // Alter the existing bars to new heights, with an animation
@@ -187,12 +182,12 @@ function updateGraph(match){
 		.data(data)
 		.transition()
 		.duration(500) // changed from 1s to 1/2s
-		.attr("y", function(d){return y(d)})
-		.attr("height", function(d){return height - y(d);});			
+		.attr("y", function(d){return y(d)}) // replaces a constant, the first time
+		.attr("height", function(d){return height - y(d);}); // ditto
 	});
 };
 
-//0s out bar height array
+// zeros out bar height array
 function resetData(){
         data = []; // seems to fix my max problem
 	for (var i = 0; i < numBars; i++){
