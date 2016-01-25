@@ -108,6 +108,23 @@ svg.selectAll('.unbar')
 d3.select("#container").style("display", "block");
 d3.select("#footerInfo").style("display", "block");
 
+window.onpopstate = function(event) {
+    console.log("XXX onpopstate fired, event=", event);
+    if (event.state.q) {
+	word = event.state.q; // modifies global
+	console.log("XXX Firing udpateGraph inside of onpopstate");
+	updateWord(event.state.q);
+    }
+};
+
+if (history.state.q) {
+    console.log("XXX history.state.q is something on pageload, q=", history.state.q);
+    word = history.state.q; // global variable
+    $("#autocomplete").val(history.state.q); // autocomplete box
+    updateWord(word);
+}
+
+
 $('#autocomplete').focus();
 
 function doClick(cord){
@@ -160,7 +177,8 @@ function doClick(cord){
 	    //var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
 	    var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
 
-	    var t = '<a href="' + url_details + '" target="_blank">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
+//	    var t = '<a href="' + url_details + '" target="_blank">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
+	    var t = '<a href="' + url_details + '">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
 	    var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold, but that's not a big deal
 	    s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
 
@@ -177,6 +195,12 @@ function updateGraph(match){
         // clear off the bottom stuff
         document.getElementById('year').innerHTML = 'click to select a year';
         document.getElementById("context").innerHTML = '';
+
+        // set state so that the back button does something reasonable
+        history.pushState( { q: match }, "");
+    // XXX
+        console.log("XXX after pushState, state is", history.state.q);
+    // XXX
 
 	$.getJSON("//researcher3.fnf.archive.org:8080/years", {
 	    q: match
@@ -244,8 +268,12 @@ function resetData(){
 	}
 }
 
-function updateWord(){
-	word = $("#autocomplete").val(); // changes global
+function updateWord(w){
+        if (w) {
+	    word = w;
+	} else {
+	    word = $("#autocomplete").val(); // changes global
+        }
 	if (word.length > 0){
 		updateGraph(word); // changes the graph
 		d3.select("#wordText").text(word); // sets term in visible label
