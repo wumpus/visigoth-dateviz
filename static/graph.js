@@ -28,6 +28,20 @@ var yAxis = d3.svg.axis()
 		.orient("left")
 		.tickFormat(d3.format("d"));
 
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return d;
+  })
+
+var untip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([400, 0]) // along the bottom
+  .html(function(d) {
+    return d;
+  })
+
 var svg = d3.select("#graph").append("svg")
 		.attr("id", "svg")
 		.attr("width", width + margin.left + margin.right) // depends on barWidth ...
@@ -36,9 +50,8 @@ var svg = d3.select("#graph").append("svg")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 		.attr("id", "transformBox");
 
-var tooltip = d3.select("body")
-		.append("div")
-		.attr("id","tooltip");
+svg.call(tip);
+svg.call(untip);
 
 // removes placeholder loading text ... most useful so you can immediately see a crash on syntax error
 document.getElementById('loadingText').innerHTML = '';
@@ -86,7 +99,9 @@ svg.selectAll('.bar')
 	var cord = d3.mouse(this);
 	var year = x.invert(cord[0]).getFullYear();
 	doClick(year);
-    });
+    })
+    .on('mouseover', tip.show)
+    .on('mouseout', tip.hide);
 
 // draws initial inverted histogram bars - data is all zeroes
 // set up click callback
@@ -98,12 +113,13 @@ svg.selectAll('.unbar')
     .attr("width", barWidth)
     .attr("y", 0) // starts at top
     .attr("height", height-1) // extends to bottom (initial data is zero) ... minus 1 to not overwrite x axis
-    .style("fill", "#FFFFFF") // white
     .on("click", function(){
 	var cord = d3.mouse(this);
 	var year = x.invert(cord[0]).getFullYear();
 	doClick(year);
-    });
+    })
+    .on('mouseover', untip.show)
+    .on('mouseout', untip.hide);
 
 //$('#footer').css('margin-left', xWidth/2 - 180);
 
