@@ -81,10 +81,11 @@ svg.selectAll('.bar')
     .attr("x", function(d, i){return (1+i)*barWidth;})
     .attr("width", barWidth)
     .attr("y", height) // starts at bottom
-    .attr("height", 0)
+    .attr("height", 0) // height of zero
     .on("click", function(){
 	var cord = d3.mouse(this);
-	doClick(cord);
+	var year = x.invert(cord[0]).getFullYear();
+	doClick(year);
     });
 
 // draws initial inverted histogram bars - data is all zeroes
@@ -100,7 +101,8 @@ svg.selectAll('.unbar')
     .style("fill", "#FFFFFF") // white
     .on("click", function(){
 	var cord = d3.mouse(this);
-	doClick(cord);
+	var year = x.invert(cord[0]).getFullYear();
+	doClick(year);
     });
 
 //$('#footer').css('margin-left', xWidth/2 - 180);
@@ -109,28 +111,30 @@ d3.select("#container").style("display", "block");
 d3.select("#footerInfo").style("display", "block");
 
 window.onpopstate = function(event) {
-    console.log("XXX onpopstate fired, event=", event);
-    if (event.state.q) {
+    console.log("XXX onpopstate fired");
+    if (event.state && event.state.q) {
+	console.log("XXX event.state.q is something, q=", event.state.q);
 	word = event.state.q; // modifies global
+	$("#autocomplete").val(event.state.q); // autocomplete box value
 	console.log("XXX Firing udpateGraph inside of onpopstate");
-	updateWord(event.state.q);
+	updateWord(event.state.q, event.state.y);
     }
 };
 
-if (history.state.q) {
+if (history.state && history.state.q) {
     console.log("XXX history.state.q is something on pageload, q=", history.state.q);
+    console.log("XXX history.state.y is something on pageload, y=", history.state.y);
     word = history.state.q; // global variable
-    $("#autocomplete").val(history.state.q); // autocomplete box
-    updateWord(word);
+    $("#autocomplete").val(history.state.q); // autocomplete box value
+    updateWord(word, history.state.y);
 }
-
 
 $('#autocomplete').focus();
 
-function doClick(cord){
-    var cord_x = Math.floor(cord[0]/barWidth);
-    var year = x.invert(cord[0]).getFullYear();
+function doClick(year){
     console.log("click event, year=", year);
+
+    history.replaceState( { q: word, y: year }, ""); // word is a global
 
     var xx = year-1000; // XXX
 
@@ -189,18 +193,20 @@ function doClick(cord){
 };
 
 //redraws graph for new match
-function updateGraph(match){
+function updateGraph(match, year){
         console.log("entering updateGraph, making years json outcall");
 
         // clear off the bottom stuff
         document.getElementById('year').innerHTML = 'click to select a year';
         document.getElementById("context").innerHTML = '';
 
-        // set state so that the back button does something reasonable
-        history.pushState( { q: match }, "");
-    // XXX
-        console.log("XXX after pushState, state is", history.state.q);
-    // XXX
+        // set state so that the back button does something reasonable -- no year yet
+        var state = { q: match };
+        if (year) {
+	    state.y = year;
+	}
+        console.log("calling replaceState with state=", JSON.stringify(state));
+        history.replaceState(state, "");
 
 	$.getJSON("//researcher3.fnf.archive.org:8080/years", {
 	    q: match
@@ -212,12 +218,12 @@ function updateGraph(match){
 
 	    var years = ydata.error ? [] : ydata.years;
 
-	    console.log("filling in data from callback values");
+	    console.log("filling in years from callback values");
 	    for (var p in years) {
 		data[p-1000] = years[p]; // scatter-gather XXX fails to clip to 1000:2000
 		word_sum += years[p]; // XXX so word_sum is not the same as what appears on the graph.
 	    }
-	    console.log("after filling in data, length is", data.length);
+	    console.log("after filling in years data, length is", data.length);
 	    console.log("word_sum is now", word_sum);
 
 	    var datamax = d3.max(data); // XXX fails to clip to 1000:2000
@@ -232,7 +238,7 @@ function updateGraph(match){
 	    if ( word_sum > 1 ) {
 		document.getElementById('loadingText').innerHTML = '';
 	    } else {
-		document.getElementById('loadingText').innerHTML = 'Tip: Pick something out of the dropdown!<br>This demo is limited to "things" with Wikipedia articles.';
+		document.getElementById('loadingText').innerHTML = 'Tip: Pick something out of the autocomplete dropdown!<br>This demo is limited to "things" with Wikipedia articles.';
 	    }
 
 	    console.log("telling d3 about the new data");
@@ -257,6 +263,9 @@ function updateGraph(match){
 		.duration(500) // changed from 1s to 1/2s
 		.attr("y", function(d){return 0;}) // replaces a constant, the first time
 		.attr("height", function(d){return y(d)-1;}); // ditto
+
+	    if (history.state && history.state.y)
+		doClick(history.state.y);
 	});
 };
 
@@ -268,14 +277,14 @@ function resetData(){
 	}
 }
 
-function updateWord(w){
+function updateWord(w, y){
         if (w) {
 	    word = w;
 	} else {
 	    word = $("#autocomplete").val(); // changes global
         }
 	if (word.length > 0){
-		updateGraph(word); // changes the graph
+		updateGraph(word, y); // changes the graph
 		d3.select("#wordText").text(word); // sets term in visible label
 		d3.select("#title").style("visibility", "visible");
 	}
