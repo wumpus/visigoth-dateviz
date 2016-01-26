@@ -57,7 +57,7 @@ svg.call(untip);
 
 // removes placeholder loading text ... most useful so you can immediately see a crash on syntax error
 document.getElementById('loadingText').innerHTML = '';
-document.getElementById('year').innerHTML = 'click to select a year'
+document.getElementById('year').innerHTML = 'click on a year to see details';
 
 var data = [];			// height of bars, representing occurences of match per bucket of x chars
 var word;			// matched word (or string) 
@@ -179,7 +179,7 @@ function doClick(year){
 	else if ( data[xx-2].count )
 	    year -= 2;
 	else {
-	    document.getElementById('year').innerHTML = 'click to select a year';
+	    document.getElementById('year').innerHTML = 'click on a year to see details';
 	    document.getElementById("context").innerHTML = '<br /><br /><br /><br /><br />';
 	    return;
 	}
@@ -218,7 +218,7 @@ function updateGraph(match, year){
         console.log("entering updateGraph, making years json outcall");
 
         // clear off the bottom stuff
-        document.getElementById('year').innerHTML = 'click to select a year';
+        document.getElementById('year').innerHTML = 'click on a year to see details';
         document.getElementById("context").innerHTML = '<br /><br /><br /><br /><br />';
 
         // set state so that the back button does something reasonable -- no year yet
