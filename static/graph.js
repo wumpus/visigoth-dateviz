@@ -242,15 +242,16 @@ function updateGraph(match, year){
 	    console.log("filling in years from callback values");
 	    for (var p in years) {	
 		var position = p - 1000;
+		if (position < 0 || position > 1000)
+		    continue;
 		data[position] = {};
-		data[position].count = years[p]; // scatter-gather XXX fails to clip to 1000:2000
+		data[position].count = years[p];
 		data[position].year = p;
-		word_sum += years[p]; // XXX so word_sum is not the same as what appears on the graph
+		word_sum += years[p];
 	    }
 	    console.log("after filling in years data, length is", data.length);
 	    console.log("word_sum is now", word_sum);
 
-	    // var datamax = d3.max(data); // XXX fails to clip to 1000:2000
 	    datamax = Math.max.apply(Math, data.map(function(o){return o.count ? o.count : 0;}))
 	    console.log("XXX new-method datamax is", datamax);
 
@@ -300,7 +301,7 @@ function updateGraph(match, year){
 function resetData(){
         data = []; // seems to fix my max problem
 	for (var i = 0; i < numBars; i++){
-		data[i] = { count: 0 }; // not setting a year
+		data[i] = { count: 0, year: i+1000 };
 	}
 }
 
