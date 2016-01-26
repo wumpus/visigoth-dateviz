@@ -181,8 +181,11 @@ function doClick(year){
 	    //var url_view = 'https://archive.org/stream/' + m.ia_id + '/#page/n' + m.leaf + '/mode/2up" target="_blank' // correct leaf
 	    var url_details = 'https://archive.org/details/' + m.ia_id // XXX no way to specify a leaf here?
 
-//	    var t = '<a href="' + url_details + '" target="_blank">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
-	    var t = '<a href="' + url_details + '">' + m.title + '</a> (rank='+ m.rank + ' leaf=' + m.leaf + ')<p />';
+//	    var rl = ' (rank='+ m.rank + ' leaf=' + m.leaf + ')';
+//	    var blank = ' target="_blank"';
+	    var blank = '';
+	    var rl = '';
+	    var t = '<a href="' + url_details + '"' + blank + '>' + m.title + '</a>' + rl + '<p />';
 	    var s = m.s.replace(new RegExp('(' + word  + ')', 'gi'), "<b>$1</b>"); // this may double-bold, but that's not a big deal
 	    s = s.replace(new RegExp('(' + year  + ')', 'gi'), "<b>$1</b>"); // this is still needed
 
