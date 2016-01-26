@@ -32,7 +32,7 @@ var tip = d3.tip()
   .attr('class', 'd3-tip')
   .offset([-10, 0])
   .html(function(d) {
-    return d;
+    return d.year;
   })
 
 var untip = d3.tip()
@@ -41,7 +41,7 @@ var untip = d3.tip()
       return [this.getBBox().height-10, 0] // same position as tip, above
   })
   .html(function(d) {
-    return d;
+    return d.year;
   })
 
 var svg = d3.select("#graph").append("svg")
@@ -156,27 +156,27 @@ function doClick(year){
 
     var xx = year-1000; // XXX
 
-    if( ! data[xx] ) {
-	// if there's no data for this year, find a nearby year that has data
-	if ( data[xx+1] )
-	    if ( data[xx-1] ) {
-		if ( data[xx+1] > data[xx-1] )
+    if( ! data[xx].count ) {
+	// if there's no data for this year, find a nearby year that has data - biggest count wins
+	if ( data[xx+1].count )
+	    if ( data[xx-1].count ) {
+		if ( data[xx+1].count > data[xx-1].count )
 		    year += 1;
 		else
 		    year -= 1;
 	    } else
 		year += 1;
-	else if ( data[xx-1] )
+	else if ( data[xx-1].count )
 	    year -= 1;
-	else if ( data[xx+2] )
-	    if ( data[xx-2] ) {
-		if ( data[xx+2] > data[xx-2] )
+	else if ( data[xx+2].count )
+	    if ( data[xx-2].count ) {
+		if ( data[xx+2].count > data[xx-2].count )
 		    year += 2;
 		else
 		    year -= 2;
 	    } else
 		year += 2;
-	else if ( data[xx-2] )
+	else if ( data[xx-2].count )
 	    year -= 2;
 	else {
 	    document.getElementById('year').innerHTML = 'click to select a year';
@@ -240,17 +240,23 @@ function updateGraph(match, year){
 	    var years = ydata.error ? [] : ydata.years;
 
 	    console.log("filling in years from callback values");
-	    for (var p in years) {
-		data[p-1000] = years[p]; // scatter-gather XXX fails to clip to 1000:2000
-		word_sum += years[p]; // XXX so word_sum is not the same as what appears on the graph.
+	    for (var p in years) {	
+		var position = p - 1000;
+		data[position] = {};
+		data[position].count = years[p]; // scatter-gather XXX fails to clip to 1000:2000
+		data[position].year = p;
+		word_sum += years[p]; // XXX so word_sum is not the same as what appears on the graph
 	    }
 	    console.log("after filling in years data, length is", data.length);
 	    console.log("word_sum is now", word_sum);
 
-	    var datamax = d3.max(data); // XXX fails to clip to 1000:2000
+	    // var datamax = d3.max(data); // XXX fails to clip to 1000:2000
+	    datamax = Math.max.apply(Math, data.map(function(o){return o.count ? o.count : 0;}))
+	    console.log("XXX new-method datamax is", datamax);
+
 	    for( var i = 0, l = data.length; i < l; i++ ) {
-		if ( data[i] > 0 ) {
-		    data[i] = Math.max(data[i], datamax / (height/2.)); // if non-zero, min height is 3 pixels
+		if ( data[i].count > 0 ) {
+		    data[i].count = Math.max(data[i].count, datamax / (height/2.)); // if non-zero, min height is 3 pixels
 		}
 	    }
 
@@ -266,7 +272,7 @@ function updateGraph(match, year){
 
 	    x.domain([new Date("1000"), new Date("2000")]);
 	    svg.select(".x.axis").call(xAxis);
-	    y.domain([0, d3.max(data)]); // XXX this is over all data, not the 1000:2000 that we're actually showing ... and is a recompute of datamax
+	    y.domain([0, datamax]); // XXX this is over all data, not the 1000:2000 that we're actually showing ... and is a recompute of datamax
 	    svg.select(".y.axis").call(yAxis);
 	
 	    // Alter the existing bars to new heights, with an animation
@@ -274,8 +280,8 @@ function updateGraph(match, year){
 		.data(data)
 		.transition()
 		.duration(500) // changed from 1s to 1/2s
-		.attr("y", function(d){return y(d)}) // replaces a constant, the first time
-		.attr("height", function(d){return height - y(d);}); // ditto
+		.attr("y", function(d){return y(d.count)}) // replaces a constant, the first time
+		.attr("height", function(d){return height - y(d.count);}); // ditto
 
 	    // Alter the existing unbars to new heights, with an animation
 	    svg.selectAll('.unbar')
@@ -283,7 +289,7 @@ function updateGraph(match, year){
 		.transition()
 		.duration(500) // changed from 1s to 1/2s
 		.attr("y", function(d){return 0;}) // replaces a constant, the first time
-		.attr("height", function(d){return y(d)-1;}); // ditto
+		.attr("height", function(d){return y(d.count)-1;}); // ditto
 
 	    if (history.state && history.state.y)
 		doClick(history.state.y);
@@ -294,7 +300,7 @@ function updateGraph(match, year){
 function resetData(){
         data = []; // seems to fix my max problem
 	for (var i = 0; i < numBars; i++){
-		data[i] = 0;
+		data[i] = { count: 0 }; // not setting a year
 	}
 }
 
