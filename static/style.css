@@ -3,7 +3,12 @@ font-family: georgia;
 }
 
 #mytitle{
-  font-size: 200%;  
+  font-size: 150%;
+  text-align: center;
+}
+
+#mysubtitle{
+  font-size: 125%;
   text-align: center;
 }
 
