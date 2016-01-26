@@ -12,6 +12,10 @@ font-family: georgia;
   text-align: center;
 }
 
+#greyText{
+  color: grey;
+}
+
 #container{
   display: none;
 }
