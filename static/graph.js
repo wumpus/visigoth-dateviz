@@ -1,5 +1,5 @@
 //var xWidth = Math.max(window.innerWidth - 150, 1000); // force to 1000 wide, because we want that many years to be possible
-var xWidth = 1000;
+var xWidth = 1015;
 
 var barWidth = 1; // should be an integer
 var numBars = Math.floor(xWidth/barWidth); // depends on barWidth
@@ -9,7 +9,7 @@ var width = numBars*barWidth // + margin.left + margin.right; // depends on barW
 var height = Math.max(window.innerHeight - margin.top - margin.bottom - 400, 400); // max of 400
 
 var minDate = new Date("1000");
-var maxDate = new Date("2000");
+var maxDate = new Date("2015");
 
 var x = d3.time.scale()
                 .domain([minDate, maxDate])
@@ -242,7 +242,7 @@ function updateGraph(match, year){
 	    console.log("filling in years from callback values");
 	    for (var p in years) {	
 		var position = p - 1000;
-		if (position < 0 || position > 1000)
+		if (position < 0 || position > 1015)
 		    continue;
 		data[position] = {};
 		data[position].count = years[p];
@@ -271,9 +271,9 @@ function updateGraph(match, year){
 
 	    console.log("telling d3 about the new data");
 
-	    x.domain([new Date("1000"), new Date("2000")]);
+	    x.domain([new Date("1000"), new Date("2015")]);
 	    svg.select(".x.axis").call(xAxis);
-	    y.domain([0, datamax]); // XXX this is over all data, not the 1000:2000 that we're actually showing ... and is a recompute of datamax
+	    y.domain([0, datamax]);
 	    svg.select(".y.axis").call(yAxis);
 	
 	    // Alter the existing bars to new heights, with an animation
