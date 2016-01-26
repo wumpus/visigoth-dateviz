@@ -8,8 +8,8 @@ var margin = {top: 20, right: 0, bottom: 50, left: 70};
 var width = numBars*barWidth // + margin.left + margin.right; // depends on barWidth
 var height = Math.max(window.innerHeight - margin.top - margin.bottom - 400, 400); // max of 400
 
-var minDate = new Date("1000");
-var maxDate = new Date("2015");
+var minDate = new Date("1000-06-01");
+var maxDate = new Date("2015-06-01");
 
 var x = d3.time.scale()
                 .domain([minDate, maxDate])
@@ -99,8 +99,9 @@ svg.selectAll('.bar')
     .attr("height", 0) // height of zero
     .on("click", function(){
 	var cord = d3.mouse(this);
-	var year = x.invert(cord[0]).getFullYear();
-	doClick(year);
+	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
+	var actual_year = this.__data__.year; // get it out of the data
+	doClick(actual_year);
     })
     .on('mouseover', tip.show)
     .on('mouseout', tip.hide);
@@ -117,8 +118,9 @@ svg.selectAll('.unbar')
     .attr("height", height-1) // extends to bottom (initial data is zero) ... minus 1 to not overwrite x axis
     .on("click", function(){
 	var cord = d3.mouse(this);
-	var year = x.invert(cord[0]).getFullYear();
-	doClick(year);
+	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
+	var actual_year = this.__data__.year; // get it out of the data
+	doClick(actual_year);
     })
     .on('mouseover', untip.show)
     .on('mouseout', untip.hide);
@@ -271,7 +273,7 @@ function updateGraph(match, year){
 
 	    console.log("telling d3 about the new data");
 
-	    x.domain([new Date("1000"), new Date("2015")]);
+	    x.domain([new Date("1000-06-01"), new Date("2015-06-01")]);
 	    svg.select(".x.axis").call(xAxis);
 	    y.domain([0, datamax]);
 	    svg.select(".y.axis").call(yAxis);
