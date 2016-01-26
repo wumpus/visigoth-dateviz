@@ -180,7 +180,7 @@ function doClick(year){
 	    year -= 2;
 	else {
 	    document.getElementById('year').innerHTML = 'click to select a year';
-	    document.getElementById("context").innerHTML = '';
+	    document.getElementById("context").innerHTML = '<br /><br /><br /><br /><br />';
 	    return;
 	}
 	console.log('XXX adjusted year to year=', year);
@@ -219,7 +219,7 @@ function updateGraph(match, year){
 
         // clear off the bottom stuff
         document.getElementById('year').innerHTML = 'click to select a year';
-        document.getElementById("context").innerHTML = '';
+        document.getElementById("context").innerHTML = '<br /><br /><br /><br /><br />';
 
         // set state so that the back button does something reasonable -- no year yet
         var state = { q: match };
