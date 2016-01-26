@@ -12,6 +12,10 @@ font-family: georgia;
   text-align: center;
 }
 
+#centeredText{
+  text-align: center;
+}
+
 #loadingText{
   color: grey;
   text-align: center;
