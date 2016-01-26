@@ -37,7 +37,9 @@ var tip = d3.tip()
 
 var untip = d3.tip()
   .attr('class', 'd3-tip')
-  .offset([400, 0]) // along the bottom
+  .offset(function() {
+      return [this.getBBox().height-10, 0] // same position as tip, above
+  })
   .html(function(d) {
     return d;
   })
