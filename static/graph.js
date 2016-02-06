@@ -1,5 +1,5 @@
 //var xWidth = Math.max(window.innerWidth - 150, 1000); // force to 1000 wide, because we want that many years to be possible
-var xWidth = 1015;
+var xWidth = 1016;
 
 var barWidth = 1; // should be an integer
 var numBars = Math.floor(xWidth/barWidth); // depends on barWidth
@@ -97,14 +97,29 @@ svg.selectAll('.bar')
     .attr("width", barWidth)
     .attr("y", height) // starts at bottom
     .attr("height", 0) // height of zero
+    .on('mouseover', tip.show)
+    .on('mouseout', tip.hide)
     .on("click", function(){
-	var cord = d3.mouse(this);
+	// var cord = d3.mouse(this);
 	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
 	var actual_year = this.__data__.year; // get it out of the data
+	console.log('bar click for year ', actual_year);
 	doClick(actual_year);
-    })
-    .on('mouseover', tip.show)
-    .on('mouseout', tip.hide);
+    });
+/*
+    .on('mouseover', function(d){
+	// var cord = d3.mouse(this);
+	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
+	var actual_year = this.__data__.year; // get it out of the data
+	console.log("mouseover for bar ", actual_year);
+	tip.show(d); })
+    .on('mouseout', function(d){
+	// var cord = d3.mouse(this);
+	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
+	var actual_year = this.__data__.year; // get it out of the data
+	console.log("mouseout for bar ", actual_year);
+	tip.hide(d); });
+*/
 
 // draws initial inverted histogram bars - data is all zeroes
 // set up click callback
@@ -117,11 +132,26 @@ svg.selectAll('.unbar')
     .attr("y", 0) // starts at top
     .attr("height", height-1) // extends to bottom (initial data is zero) ... minus 1 to not overwrite x axis
     .on("click", function(){
-	var cord = d3.mouse(this);
+	// var cord = d3.mouse(this);
 	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
 	var actual_year = this.__data__.year; // get it out of the data
+	console.log('unbar click for year ', actual_year);
 	doClick(actual_year);
     })
+/*
+    .on('mouseover', function(d){
+	// var cord = d3.mouse(this);
+	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
+	var actual_year = this.__data__.year; // get it out of the data
+	console.log("mouseover for unbar ", actual_year);
+	tip.show(d); })
+    .on('mouseout', function(d){
+	// var cord = d3.mouse(this);
+	// var year = x.invert(cord[0]).getUTCFullYear(); // not accurate enough :/
+	var actual_year = this.__data__.year; // get it out of the data
+	console.log("mouseout for unbar ", actual_year);
+	tip.hide(d); });
+*/
     .on('mouseover', untip.show)
     .on('mouseout', untip.hide);
 
@@ -190,7 +220,7 @@ function doClick(year){
 
     document.getElementById('year').innerHTML = year;
 
-    $.getJSON("//researcher3.fnf.archive.org:8080/sentences", {
+    $.getJSON("sentences", {
 	q: word, // global variable
 	year: year
     }, function(sdata) {
@@ -231,7 +261,7 @@ function updateGraph(match, year){
         console.log("calling replaceState with state=", JSON.stringify(state));
         history.replaceState(state, "");
 
-	$.getJSON("//researcher3.fnf.archive.org:8080/years", {
+	$.getJSON("years", {
 	    q: match
 	}, function(ydata) {
 
@@ -254,7 +284,7 @@ function updateGraph(match, year){
 	    console.log("after filling in years data, length is", data.length);
 	    console.log("word_sum is now", word_sum);
 
-	    datamax = Math.max.apply(Math, data.map(function(o){return o.count ? o.count : 0;}))
+	    datamax = Math.max.apply(Math, data.map(function(o){return o.count ? o.count : 0;})) * 1.1;
 	    console.log("XXX new-method datamax is", datamax);
 
 	    for( var i = 0, l = data.length; i < l; i++ ) {
@@ -277,22 +307,24 @@ function updateGraph(match, year){
 	    svg.select(".x.axis").call(xAxis);
 	    y.domain([0, datamax]);
 	    svg.select(".y.axis").call(yAxis);
-	
+
+	    console.log("starting drawing, height is", height);
+
 	    // Alter the existing bars to new heights, with an animation
 	    svg.selectAll('.bar')
 		.data(data)
 		.transition()
-		.duration(500) // changed from 1s to 1/2s
-		.attr("y", function(d){return y(d.count)}) // replaces a constant, the first time
-		.attr("height", function(d){return height - y(d.count);}); // ditto
+		.duration(500)
+		.attr("y", function(d){return y(d.count)}) // replaces a constant 0
+		.attr("height", function(d){ console.log("bar ", d.year, ", d.count is ", d.count, "and h-y.d.count is ", height - y(d.count)); return height - y(d.count);}); // y + height = bottom
 
 	    // Alter the existing unbars to new heights, with an animation
 	    svg.selectAll('.unbar')
 		.data(data)
 		.transition()
-		.duration(500) // changed from 1s to 1/2s
-		.attr("y", function(d){return 0;}) // replaces a constant, the first time
-		.attr("height", function(d){return y(d.count)-1;}); // ditto
+		.duration(500)
+		.attr("y", function(d){return 0;}) // starts at top
+		.attr("height", function(d){ /* console.log("unbar ", d.year, ", d.count is ", d.count, "and y.d.count is ", y(d.count)); */return y(d.count)-1;});
 
 	    if (history.state && history.state.y)
 		doClick(history.state.y);
@@ -345,7 +377,7 @@ $( "#autocomplete" ).autocomplete({
 	},
 	source: function( request, response ) {
 	    console.log("autocomplete json outcall, q=", request.term);
-	    $.getJSON("//researcher3.fnf.archive.org:8080/autocomplete", {
+	    $.getJSON("autocomplete", {
 		q: request.term
 	    }, function(adata) {
 		// adata is an array of objects and must be transformed for autocomplete to use

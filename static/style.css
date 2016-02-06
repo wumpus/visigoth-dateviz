@@ -107,9 +107,9 @@ font-family: georgia;
 .d3-tip {
   line-height: 1;
   font-weight: bold;
-  padding: 12px;
-  background: rgba(255, 173, 0, 0.8);
-  color: black;
+  padding: 3px;
+  background: rgba(255, 173, 0, 0.8); /* same orange, slightly transparent */
+  color: black; /* text */
   border-radius: 2px;
 }
 

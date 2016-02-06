@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from bottle import route, request, response, run, static_file
+from bottle import route, request, response, run, static_file, redirect
 import pickle
 import shelve
 import json
@@ -37,13 +37,25 @@ if os.environ.get('BOTTLE_CHILD') or not reloader:
 
 @route('/')
 def front_page():
+    redirect("/dateviz/", 302) # soft
+
+@route('/dateviz')
+def front_page():
+    redirect("/dateviz/", 302) # soft
+
+@route('/dateviz/')
+def front_page():
     return static_file('index.html', root='./static')
 
-@route('/static/<filename>')
+@route('/dateviz/static/<filename>')
 def server_static(filename):
     return static_file(filename, root='./static')
 
-@route('/autocomplete')
+@route('/dateviz/static/images/<filename>')
+def server_static(filename):
+    return static_file(filename, root='./static/images')
+
+@route('/dateviz/autocomplete')
 def autocomplete_rest():
     q = request.query.q or '' # will preserve utf8 encoding. url decoded, so + and %20 are already handled
     q = q.lower()
@@ -66,7 +78,7 @@ def autocomplete_rest():
 
     return { "autocomplete": ret }
 
-@route('/years')
+@route('/dateviz/years')
 def years_rest():
     q = request.query.q or ''
 
@@ -78,7 +90,7 @@ def years_rest():
 
     return { "years": y }
 
-@route('/sentences')
+@route('/dateviz/sentences')
 def sentences_rest():
     q = request.query.q or ''
     year = request.query.year or ''
@@ -120,6 +132,7 @@ def sentences_rest():
 
     return { "sentences": new }
 
+# this will only be hit for the underlying website. books.archivelab.org has the real /robots.txt
 @route('/robots.txt')
 def robots():
     return static_file('robots.txt', root='./static')
