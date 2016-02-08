@@ -284,8 +284,7 @@ function updateGraph(match, year){
 	    console.log("after filling in years data, length is", data.length);
 	    console.log("word_sum is now", word_sum);
 
-	    datamax = Math.max.apply(Math, data.map(function(o){return o.count ? o.count : 0;})) * 1.1;
-	    console.log("XXX new-method datamax is", datamax);
+	    datamax = Math.max.apply(Math, data.map(function(o){return o.count ? o.count : 0;})); // * 1.1 -- caused bug clicking inside tall bars ?!
 
 	    for( var i = 0, l = data.length; i < l; i++ ) {
 		if ( data[i].count > 0 ) {
