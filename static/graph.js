@@ -161,30 +161,54 @@ d3.select("#container").style("display", "block");
 d3.select("#footerInfo").style("display", "block");
 
 window.onpopstate = function(event) {
-    console.log("XXX onpopstate fired");
+    console.log("onpopstate fired");
     if (event.state && event.state.q) {
-	console.log("XXX event.state.q is something, q=", event.state.q);
-	word = event.state.q; // modifies global
-	$("#autocomplete").val(event.state.q); // autocomplete box value
-	console.log("XXX Firing udpateGraph inside of onpopstate");
+	word = event.state.q; // modifies our global
 	updateWord(event.state.q, event.state.y);
     }
 };
 
+var urlParams = {}; // global variable, needed to preserve debugging args
+
 if (history.state && history.state.q) {
-    console.log("XXX history.state.q is something on pageload, q=", history.state.q);
-    console.log("XXX history.state.y is something on pageload, y=", history.state.y);
+    // this state is entered when a user clicks on a book and then hits the back button
     word = history.state.q; // global variable
-    $("#autocomplete").val(history.state.q); // autocomplete box value
     updateWord(word, history.state.y);
+} else {
+    // new arrival. Parse q and y out of url, if present.
+    parseArgs();
+    if (urlParams.q) {
+	console.log("q and y are:", urlParams.q, urlParams.y);
+	word = urlParams.q; // modifies our global
+	updateWord(word, parseInt(urlParams.y));
+    }
+}
+
+function parseArgs() {
+    // http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript?lq=1
+    var match,
+        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g,
+        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+        query  = window.location.search.substring(1);
+
+    urlParams = {};
+    while (match = search.exec(query))
+	urlParams[decode(match[1])] = decode(match[2]);
+    if (urlParams.q) // treat this specially
+        urlParams.q = urlParams.q.trim().replace('+', ' ');
+};
+
+function formatArgs() {
+    if (urlParams.q)
+	urlParams.q = urlParams.q.trim();
+    return $.param(urlParams).replace(/%20/g, '+');
 }
 
 $('#autocomplete').focus();
 
 function doClick(year){
     console.log("click event, year=", year);
-
-    history.replaceState( { q: word, y: year }, ""); // word is a global
 
     var xx = year-1000; // XXX
 
@@ -217,6 +241,18 @@ function doClick(year){
 	}
 	console.log('XXX adjusted year to year=', year);
     }
+
+    urlParams.q = word;
+    if (year)
+	urlParams.y = year;
+    else
+	delete urlParams.y;
+
+    var newargs = formatArgs();
+    if (newargs)
+	newargs = '?' + newargs;
+    console.log("XXX replacestate, formatted params are "+newargs);
+    history.replaceState( { q: word, y: year }, "", newargs);
 
     document.getElementById('year').innerHTML = year;
 
@@ -253,13 +289,20 @@ function updateGraph(match, year){
         document.getElementById('year').innerHTML = 'click on a year to see details';
         document.getElementById("context").innerHTML = '<br><br><br><br><br>';
 
-        // set state so that the back button does something reasonable -- no year yet
+        // set state so that the back button does something reasonable
         var state = { q: match };
         if (year) {
 	    state.y = year;
+	    urlParams.y = year;
+	} else {
+	    delete urlParams.y;
 	}
+        urlParams.q = match.trim();
         console.log("calling replaceState with state=", JSON.stringify(state));
-        history.replaceState(state, "");
+        var newargs = formatArgs();
+        if (newargs)
+	    newargs = '?' + newargs;
+        history.replaceState(state, "", newargs);
 
 	$.getJSON("years", {
 	    q: match
@@ -315,7 +358,7 @@ function updateGraph(match, year){
 		.transition()
 		.duration(500)
 		.attr("y", function(d){return y(d.count)}) // replaces a constant 0
-		.attr("height", function(d){ console.log("bar ", d.year, ", d.count is ", d.count, "and h-y.d.count is ", height - y(d.count)); return height - y(d.count);}); // y + height = bottom
+		.attr("height", function(d){ return height - y(d.count);}); // y + height = bottom
 
 	    // Alter the existing unbars to new heights, with an animation
 	    svg.selectAll('.unbar')
@@ -323,7 +366,7 @@ function updateGraph(match, year){
 		.transition()
 		.duration(500)
 		.attr("y", function(d){return 0;}) // starts at top
-		.attr("height", function(d){ /* console.log("unbar ", d.year, ", d.count is ", d.count, "and y.d.count is ", y(d.count)); */return y(d.count)-1;});
+		.attr("height", function(d){ return y(d.count)-1;});
 
 	    if (history.state && history.state.y)
 		doClick(history.state.y);
@@ -340,10 +383,12 @@ function resetData(){
 
 function updateWord(w, y){
         if (w) {
-	    word = w;
+	    word = w.trim();
+            $("#autocomplete").val(word);
 	} else {
 	    word = $("#autocomplete").val(); // changes global
         }
+
 	if (word.length > 0){
 		updateGraph(word, y); // changes the graph
 		d3.select("#wordText").text(word); // sets term in visible label
