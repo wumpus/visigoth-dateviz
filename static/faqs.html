@@ -54,8 +54,8 @@ How does this relate to Google's Ngram Viewer?
 <p>
 <strong>
 <a href="#n5">
-This system is really fast! Will it remain so if it indexed 8
-million books?
+Can you talk a little about the techical aspects of this
+system?
 </a>
 </strong>
 </p>
@@ -124,17 +124,26 @@ in the same sentence as the things.
 
 <a name="n5"></a>
 <p><b>
-This system is really fast! Will it remain so if it indexed 8
-million books?
+Can you talk a little about the techical aspects of this
+system?
 </b></p>
 
 <p>
-Yes. This visualization's database of 82,000 books is fully
-denormalized and weighs in at 45 gigabytes, which means that a single
-server can support around 50 search queries per second, even if I
-extended the database to 8 million books (4.5 terabytes). That's
-enough capacity for thousands of simultaneous users, and multiple
-servers could be used together to scale to much larger user counts.
+
+Sure! The year graphs for each thing, and the sentences list for each
+thing/date pair, are stored in a fully denormalized database. This
+means that any user interaction with the visualization only needs 1
+call to the server, which needs to perform only 1 disk read to
+reply. This denormalizated data takes more storage in order to be
+fast. A single server ought to be able to handle 20 queries per second
+from a regular disk (spinning rust), or as much as 10,000 queries per
+second from SSD.
+
+</p><p>
+
+The database takes 45 gigabytes for 82,000 books. I expect to eventually
+index around 10 million books, which scales to a predicted 6 terabyte database.
+
 </p>
 
 <a name="n6"></a>
