@@ -237,6 +237,7 @@ function doClick(year){
 	else {
 	    document.getElementById('year').innerHTML = 'click on a year to see details';
 	    document.getElementById("context").innerHTML = '<br><br><br><br><br>';
+	    updateGraph(word); // needed to reset the url to not have the year
 	    return;
 	}
 	console.log('XXX adjusted year to year=', year);
@@ -290,18 +291,28 @@ function updateGraph(match, year){
         document.getElementById("context").innerHTML = '<br><br><br><br><br>';
 
         // set state so that the back button does something reasonable
-        var state = { q: match };
+        state = {};
+        if (match) {
+            match = match.trim()
+	    state.w = match;
+	    urlParams.q = match;
+	} else {
+	    delete urlParams.q;
+	}
         if (year) {
 	    state.y = year;
 	    urlParams.y = year;
 	} else {
 	    delete urlParams.y;
 	}
-        urlParams.q = match.trim();
         console.log("calling replaceState with state=", JSON.stringify(state));
         var newargs = formatArgs();
         if (newargs)
 	    newargs = '?' + newargs;
+        else
+	    newargs = "/dateviz/"; // replaceState bug: empty string does nothing. so this path leaks into the code. XXX
+
+        console.log("calling replaceState with newargs=", newargs);
         history.replaceState(state, "", newargs);
 
 	$.getJSON("years", {
@@ -340,7 +351,8 @@ function updateGraph(match, year){
 	    if ( word_sum > 1 ) {
 		document.getElementById('loadingText').innerHTML = '';
 	    } else {
-		document.getElementById('loadingText').innerHTML = 'Tip: Pick something out of the autocomplete dropdown!<br>This demo is limited to "things" with Wikipedia articles.';
+		if (word) // only show if the user has typed something
+		    document.getElementById('loadingText').innerHTML = 'Tip: Pick something out of the autocomplete dropdown!<br>This demo is limited to "things" with Wikipedia articles.';
 	    }
 
 	    console.log("telling d3 about the new data");
@@ -396,6 +408,7 @@ function updateWord(w, y){
 	}
 	else{
 		d3.select("#title").style("visibility", "hidden");
+	        updateGraph(); // empties it out
 	}
 }
 
