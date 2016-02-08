@@ -47,6 +47,10 @@ def front_page():
 def front_page():
     return static_file('index.html', root='./static')
 
+@route('/dateviz/faqs.html')
+def faqs_page():
+    return static_file('faqs.html', root='./static')
+
 @route('/dateviz/static/<filename>')
 def server_static(filename):
     return static_file(filename, root='./static')

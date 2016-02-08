@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>FAQs for Books Date Visualization Experiment</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link href="//archive.org/includes/archive.min.css?v=2350078" rel="stylesheet" type="text/css"/>
+  </head>
+
+  <body class="navia ">
+        <!-- Begin page content -->
+        <div class="container container-ia">
+
+    <div class="box" style="width:90%; margin-left:auto; margin-right:auto;">
+  <h1>
+        Frequently Asked Questions
+  </h1>
+
+<table width="100%">
+  <tr> 
+    <td width="25%" valign="top">
+      <div class="box">
+        <h1>Questions</h1>
+
+<p>
+<strong>
+<a href="#n1">
+Can I change the X axis to be something other than the years from
+1000 CE to 2016 CE?
+</a>
+</strong>
+</p>
+<p>
+<strong>
+<a href="#n2">
+Where did this content come from?
+</a>
+</strong>
+</p>
+<p>
+<strong>
+<a href="#n3">
+How did you choose the 82,000 books in the index?
+</a>
+</strong>
+</p>
+<p>
+<strong>
+<a href="#n4">
+How does this relate to Google's Ngram Viewer?
+</a>
+</strong>
+</p>
+<p>
+<strong>
+<a href="#n5">
+This system is really fast! Will it remain so if it indexed 8
+million books?
+</a>
+</strong>
+</p>
+<p>
+<strong>
+<a href="#n6">
+What are some bugs in the current version?
+</a>
+</strong>
+</p>
+
+      </div>
+    </td>
+    <td width="75%" valign="top">
+      <div class="box">
+<a name="n1"></a>
+<p><b>
+Can I change the X axis to be something other than the years from
+1000 CE to 2016 CE?
+</b></p>
+
+<p>Sorry! That's the #1 comment everyone has, and I didn't get it done
+in time for my deadline.</p>
+
+<a name="n2"></a>
+<p><b>
+Where did this content come from?
+</b></p>
+
+<p>
+When the Internet Archive scans books, we scan them as images, and
+then use OCR (optical character recognition) to find the text of the
+words on each page.  We use this text, for example, to make books
+available to our blind and dislexic patrons. OCR is an imperfect
+process, so most of the incorrect and odd-looking words you see in
+this experiment are probably the result of OCR, and not mistakes in
+the original book.
+</p>
+
+<a name="n3"></a>
+<p><b>
+How did you choose the 82,000 books in the index?
+</b></p>
+
+<p>
+I created a ranking system for books, based on data such as the
+publisher of a book: books from academic publishers received higher
+ranks than books from vanity presses. I also used data such as
+citations in Wikipedia and some book sales data from Better World
+Books, a used-book seller that partners with the Internet
+Archive. Using these ranks, I then picked the 82,000 books in our
+collections with the highest ranks. The sentences displayed in the
+results are also sorted using these ranks.
+</p>
+
+<a name="n4"></a>
+<p><b>
+How does this relate to Google's Ngram Viewer?
+</b></p>
+
+<p>
+<a href="https://books.google.com/ngrams">Google's Ngram viewer</a> uses the publication date of the entire book
+as the date used in the graph. This visualization is using dates found
+in the same sentence as the things.
+</p>
+
+<a name="n5"></a>
+<p><b>
+This system is really fast! Will it remain so if it indexed 8
+million books?
+</b></p>
+
+<p>
+Yes. This visualization's database of 82,000 books is fully
+denormalized and weighs in at 45 gigabytes, which means that a single
+server can support around 50 search queries per second, even if I
+extended the database to 8 million books (4.5 terabytes). That's
+enough capacity for thousands of simultaneous users, and multiple
+servers could be used together to scale to much larger user counts.
+</p>
+
+<a name="n6"></a>
+<p><b>
+What are some bugs in the current version?
+</b></p>
+
+<p>
+The x-axis of this visualization isn't dynamic, which leads to
+an inability to see dates before 1000 AD/CE, and also very narrow
+bars in the graph at all times, even for "things" which only have
+sentences with a very limited range of dates.
+</p>
+
+<p>
+The sentence splitter isn't very smart, and often will show 2 or 3
+sentences run together. Occasionally this means that the date
+isn't very relevant to the "thing" you're interested in.
+</p>
+
+<p>
+Dates in the BC/BCE range of years are incorrectly parsed as if they
+were AD/CE, so a search for [Julius Caesar] will have an
+inaccurate graph. (Fortunately, the bug mentioned above regarding the
+x-axis prevents you from seing this!)
+</p>
+
+<p>
+The counts in the year graph are frequently a bit higher than the
+actual number of results - some sentences were double-counted in the
+year graph. In other cases, some identical sentences from multiple
+editions of the same book were suppressed & lower the number of
+visible sentences.
+</p>
+
+<p>
+Some extremely similar sentences still appear in the results. These
+are mostly caused by slight OCR-related differences.
+</p>
+
+<p>
+Searches for things which do not have Wikipedia articles will always
+return 0 results, by design. We hope that a future iteration of this
+experiment will use a library such as Stanford NER to extract all
+"things" mentioned in a book.
+</p>
+
+<p>
+Mentions of decades (1920s) and centuries (1900s) are treated as a
+reference to the start year, resulting in odd-looking graphs for
+things which have a lot of decade and century references.
+</p>
+
+<p>
+The "thing" isn't always boldfaced in the sentence, due to various
+issues. Sometimes it can be difficut to figure out what's going on if
+it's a synonym that is the match. For example, "Gregorian Calendar"
+and "Western calendar" are considered synonyms in the Wikipedia
+</p>
+
+      </div>
+    </td>
+  </tr>
+</table>
+
+  </body>
+</html>
+
