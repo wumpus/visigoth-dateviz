@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from bottle import route, request, response, run, static_file, redirect
+from bottle import hook, route, request, response, run, static_file, redirect
 import pickle
 import shelve
 import json
@@ -13,6 +13,12 @@ reloader=True
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../visigoth'))
 from visigoth.redirs import redirs # XXX what did I screw up here?
+
+@hook('after_request')
+def enable_cors():
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'PUT, GET, POST, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
 
 # Only open stuff if we are really going to serve queries
 if os.environ.get('BOTTLE_CHILD') or not reloader:
@@ -141,4 +147,5 @@ def sentences_rest():
 def robots():
     return static_file('robots.txt', root='./static')
 
+#run(app, host='0.0.0.0', port=8080, reloader=reloader)
 run(host='0.0.0.0', port=8080, reloader=reloader)
