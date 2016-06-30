@@ -322,6 +322,8 @@ function updateGraph(match, year){
 	    console.log("years callback fired");
 	    resetData();
 	    word_sum = 0;
+	    biggest_count = 0;
+	    biggest_year = -100000;
 
 	    var years = ydata.error ? [] : ydata.years;
 
@@ -332,6 +334,10 @@ function updateGraph(match, year){
 		    continue;
 		data[position] = {};
 		data[position].count = years[p];
+		if (years[p] > biggest_count) {
+		    biggest_count = years[p]
+		    biggest_year = p
+		}
 		data[position].year = p;
 		word_sum += years[p];
 	    }
@@ -382,6 +388,8 @@ function updateGraph(match, year){
 
 	    if (history.state && history.state.y)
 		doClick(history.state.y);
+	    else if (biggest_year > -100000)
+		doClick(biggest_year);
 	});
 };
 
